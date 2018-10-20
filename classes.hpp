@@ -1,165 +1,166 @@
 #include <iostream>
-#include <fstream>
 #include <vector>
 #include <string>
 #include <string.h>
 #include <stdio.h>
-#include <boost/regex.hpp> //lembrar de colocar no relatório que a gente tá usando essa biblioteca
-#include <boost/algorithm/string/regex.hpp>
-#include "classes.hpp"
- 
+#include <fstream>
+
 using namespace std;
-using namespace boost;
-
-void arquivo_registro(Artigo a){
-        FILE *arquivo;
-        arquivo = fopen("registro.bin", "wb");
-        fseek(arquivo, 0, SEEK_END);
-        fwrite(&a, sizeof(Artigo), 1, arquivo);
-        fclose(arquivo);
-}
-
-void parser(string arq, Hash table){
-    ifstream arquivo;
-    string line;
-    vector<string> linha;
-    arquivo.open(arq);
-   // Hash table = Hash();
-
  
-    if(arquivo.is_open()){
-        while(getline(arquivo, line)){
-            split_regex(linha, line, regex("(\";\"|(;\"){2}|\";|;\")")); //  vai splitar por esse regex.
-            
-            Artigo a = Artigo();
-            linha[0].erase(linha[0].begin());
-          
-            if(linha.size() < 7){
-                getline(arquivo, line);
-              
-                vector<string> linha2;
-                split_regex(linha2, line, regex("(\";\"|(;\"){2}|\";|;\")"));            
-                string x = linha[linha.size()-1];
-                string b = linha2[0];
-                  
-                if((b[0] != '\"') && (x[x.size()-1] != ';') && (b[0] != ';') && (x[x.size()-1] != '\"')){
-                    linha[linha.size()-1] = linha[linha.size()-1]+linha2[0];
-                    linha2.erase(linha2.begin());
 
-                    linha.reserve(linha2.size());
-                    linha.insert(linha.end(), linha2.begin(), linha2.end());
-                    
-                    a.id = stoi(linha[0]);
-                    linha[1].copy(a.titulo, 300);
-                    a.ano = stoi(linha[2]);
-                    linha[3].copy(a.autores, 150);
-                    a.citacao= stoi(linha[4]);
-                    linha[4].copy(a.atualizacao, 20);
-                    linha[6].copy(a.resumo, 1024);
-                }
-                table.insert_hash(a);
-                arquivo_registro(a);
-            }
 
-            else if(linha.size() > 7){
-                string y = linha[2];
-                if(y[0] == 22){
-                    y = ";\"" + y;
-                    linha.erase(linha.begin()+2);
-                    linha[1] = linha[1] + y;
+#ifndef CLASSES
+#define CLASSES
 
-                    a.id = stoi(linha[0]);
-                    linha[1].copy(a.titulo, 300);
-                    a.ano = stoi(linha[2]);
-                    linha[3].copy(a.autores, 150);
-                    a.citacao= stoi(linha[4]);
-                    linha[4].copy(a.atualizacao, 20);
-                    linha[6].copy(a.resumo, 1024);
-                    //cout<<a.id<<endl;
-                    table.insert_hash(a);
-                    arquivo_registro(a);
-                }
-            }
- 
-            else{
-                              
-                a.id = stoi(linha[0]);
-                linha[1].copy(a.titulo, 300);
-                a.ano = stoi(linha[2]);
-                linha[3].copy(a.autores, 150);
-                a.citacao= stoi(linha[4]);
-                linha[4].copy(a.atualizacao, 20);
-                linha[6].copy(a.resumo, 1024);
-                arquivo_registro(a);
-                table.insert_hash(a);
-            } 
-            //coloca na árvore 1
-            //coloca na árvore 2
-        }
+class ArvoreB{
+	int m = 124;
+	int mm = 2*m+1;
+};
 
-        
-        arquivo.close();
-        table.insert_arquivo();
-        cout << "Arquivo Hash Criado." << endl;
+class Formato{
+	int indice_registro;
+	int chave;
+	int indice_nodo;
+};
 
-     	//table.findrec(32);
+class Nodo{
+	vector<Formato> nodo; // o tamanho n pode passar de 2 m
+};
 
-    }
-
-    else{
-        cout << "Nao conegui abrir o arquivo!" << endl;
-    }
-}
- 
-int main(){
-    Hash table = Hash();
+class Artigo{
+    public:
     
-    int opcao;
-    cout << " ***** Bem - Vindx ***** " << endl;
+    int id;
+    char titulo[300];
+    unsigned short int ano;
+    char autores[150];
+    unsigned short int citacao;
+    char atualizacao[20];
+    char resumo[1024];
     
-    while(1){
-        cout << "0 - Sair." << endl;
-        cout << "1 - upload(FILE), carrega do arquivo inicial para o arquivo Hash e arquivos de Índice. Entrada: FILE - string com o nome do arquivo." << endl;
-        cout << "2 - findrec(ID), pesquisar no arquivo Hash por um artigo. Entrada: ID - tipo Inteiro." << endl;
+};
+ 
+class Bloco{
+    public:
+    
+    char cabecalho[1088];
+    vector<Artigo> block;
+  
+};
+ 
+class Hash{
+    public:
+    const int TAM = 766079;  
+    vector<Artigo> overflow;
+    vector <Bloco> hash;
 
-        cout << "\n";
-        cout << "Insira a opcao >> ";
-        cin >> opcao;
-        cout << "\n";
-        
-
-        if(opcao == 0){
-            cout << "Saindo......" << endl;
-            break;
-        }
-
-        else if(opcao == 1){
-            string arquivo;
-            // cout << "Insira o nome do arquivo >> ";
-            // cin >> arquivo;
-            cout << "Criando arquivos......." << endl;
-            //parser(arquivo, table);
-            cout << "\n";
-            
-            parser("artigo.csv", table);
-        }
-
-        else if (opcao == 2){
-            int id;
-            cout << "Insira o ID do artigo >> ";
-            cin >> id;
-            cout << "\n";
-            table.findrec(id);
-        }
-
-        else{
-            cout << "Opcao invalida, tente novamente :)" << endl;
-
-        }
-        
-        cout << "\n";
-
+    Hash(){
+      hash.resize(TAM);
     }
-     
-    return 0;
-}
+  
+  
+    void insert_hash(Artigo a){
+       if(hash[a.id%TAM].block.size() < 2){
+         hash[a.id%TAM].block.push_back(a);
+       } 
+       else{
+       //cout << "entrei overflow";    
+         overflow.push_back(a);
+       }
+    }   
+
+    void insert_arquivo(){
+  //   	std::ofstream os ("hash.bin", std::ofstream::binary);
+
+    	  FILE *arquivo, *overfl;
+    	  arquivo = fopen("hash.bin", "wb");
+    	  overfl = fopen("over.bin", "wb");
+    	  //cout << "oi" << endl;
+    	  for(int i = 0; i < hash.size(); i++){
+    	  	//cout << "vou tentar escrever" << endl;
+    	  	fwrite(hash[i].block.data(), sizeof(Artigo), hash[i].block.size(), arquivo);
+    	  	//fwrite(&hash[i].block[1], 1504, 1, arquivo);
+    	  	//cout << "escrevi" << endl;
+    	  }
+    	  fclose(arquivo);
+    	  //cout << "oi2" << endl;
+    	  
+    	  fwrite(overflow.data(), 1504, overflow.size(), overfl);
+    	  
+    	  //cout << "escreveu no overflow" << endl;
+
+    	  fclose(overfl);
+
+    	  //return arquivo;
+    }
+
+    void findrec(int id){ 	
+  //   	std::ifstream is("hash.bin", std::ios::binary);
+    	int finder = 0;
+    	int cont_artigos = 0;
+    	FILE *arquivo = fopen("hash.bin", "rb");
+		int pos = (id%TAM) * 3008;
+		std::vector<Artigo> b(2);
+		fseek(arquivo, pos, SEEK_SET);
+		size_t sz = fread(b.data(), sizeof b[0], b.size(), arquivo);
+		fclose(arquivo);
+		
+		for(int i = 0; i < b.size(); i++){
+			if(id == b[i].id){
+				cout << "Id: "<< b[i].id << endl;
+				cout << "Titulo: "<< b[i].titulo << endl;
+				cout << "Ano: "<< b[i].ano << endl;
+				cout << "Autores: "<< b[i].autores << endl;
+				cout << "Citacoes: "<< b[i].citacao << endl;
+				cout << "Atualizacao: "<< b[i].atualizacao << endl;
+				cout << "Snippet: "<< b[i].resumo << endl;
+
+				cout << endl << "Quantidade de Artigos no bloco: "<< b.size() << endl;
+				cout << "Total de Blocos Lidos: 1" << endl;
+
+				finder = 1;
+				break;
+			}
+		}
+
+		if(finder == 0){
+			FILE *arquivo2 = fopen("over.bin", "rb");
+			Artigo b = Artigo();
+			while(fread(&b, sizeof(Artigo), 1, arquivo2)){
+				cont_artigos++;
+
+				if(id = b.id){
+					cout << "Id: "<< b.id << endl;
+					cout << "Titulo: "<< b.titulo << endl;
+					cout << "Ano: "<< b.ano << endl;
+					cout << "Autores: "<< b.autores << endl;
+					cout << "Citacoes: "<< b.citacao << endl;
+					cout << "Atualizacao: "<< b.atualizacao << endl;
+					cout << "Snippet: "<< b.resumo << endl;
+
+					finder = 1;
+					cout << endl << "Total de Blocos Lidos no Arquivo de Hash: 1" << endl;
+					cout << "Total de Arquivos Lidos no Arquivo Overflow: " << cont_artigos << endl;
+					break;
+				}
+			}
+		}
+
+		if(finder == 0){
+			cout << "Artigo não encontrado" << endl;
+		}
+    }
+
+    // void printa_hash(){
+    //   for(int i = 0; i < TAM; i++){
+    //     if(hash[i].block.size() > 0){
+    //       cout <<"Bloco "<< i << endl; 
+    //       for(int j = 0; j < hash[i].block.size(); j++){
+    //         cout << hash[i].block[j].id << endl;
+    //       }        
+    //     }
+    //   }
+    // } 
+};
+
+#endif

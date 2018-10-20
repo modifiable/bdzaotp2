@@ -12,20 +12,45 @@ using namespace std;
 #ifndef CLASSES
 #define CLASSES
 
-class ArvoreB{
-	int m = 124;
-	int mm = 2*m+1;
+//começo da arvore
+class NodeNode{
+public:
+    int id;
+    int posicArtigo;
+
+    NodeNode(){
+        id = -1;
+        posicArtigo = -1;
+    }
 };
 
-class Formato{
-	int indice_registro;
-	int chave;
-	int indice_nodo;
+class NodeBlock{
+public:
+    vector<NodeNode> nBlock;
+    vector<NodeNode*> pointerBlock;
+
+    NodeBlock(){
+    NodeNode *childrens = NULL;
+    NodeNode nn = NodeNode();
+        for(int i=0; i<248; i++){
+            nBlock.push_back(nn);
+            pointerBlock.push_back(childrens);
+        }
+        pointerBlock.push_back(childrens);
+    }
+
 };
 
-class Nodo{
-	vector<Formato> nodo; // o tamanho n pode passar de 2 m
+class Tree{
+public:
+    NodeNode *first;
+
+    Tree(){
+        NodeBlock nb = NodeBlock();
+        first = &nb.nBlock[0]; 
+    }
 };
+//fim da arvore
 
 class Artigo{
     public:
